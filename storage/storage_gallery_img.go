@@ -1,11 +1,12 @@
 package storage
 
 import (
-	model "AahaFeltBackend2/models"
 	"encoding/base64"
 	"fmt"
 	"io/ioutil"
 	"net/http"
+
+	model "AahaFeltBackend/models"
 )
 
 func (s *PostgresStorage) InitGallery() error {

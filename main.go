@@ -20,8 +20,9 @@ func main() {
 		return
 	}
 	db.InitGallery()
-	db.InitProductImage()
+
 	server := api.NewApiServer(":3000", db)
 
 	server.Start()
+
 }

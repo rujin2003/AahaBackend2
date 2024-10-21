@@ -39,12 +39,6 @@ func (s *ApiServer) Start() {
 	router.HandleFunc("/gallery-images", makeHandler(s.getAllImageLinksHandler)).Methods("GET")
 	router.HandleFunc("/gallery-images/{id}", makeHandler(s.deleteImageHandler)).Methods("DELETE")
 
-	// MARK: Product Images
-	router.HandleFunc("/productimage", makeHandler(s.AddProductImagesHandler)).Methods("POST")
-	router.HandleFunc("/productimage/{product_name}", makeHandler(s.GetProductImagesByNameHandler)).Methods("GET")
-	router.HandleFunc("/productimg/{id}", makeHandler(s.getImageHandler)).Methods("GET")
-	router.HandleFunc("/productimage/{product_name}", makeHandler(s.DeleteProductImagesByNameHandler)).Methods("DELETE")
-
 	// MARK: Status
 	router.HandleFunc("/status", makeHandler(s.handleGetStatus)).Methods("GET")
 	router.HandleFunc("/status", makeHandler(s.handleUpdateStatus)).Methods("POST")
@@ -61,4 +55,5 @@ func (s *ApiServer) Start() {
 	if err := http.ListenAndServe(s.address, corsMiddleware(router)); err != nil {
 		fmt.Printf("Error starting server: %v\n", err)
 	}
+
 }

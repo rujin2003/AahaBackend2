@@ -1,7 +1,7 @@
 package storage
 
 import (
-	model "AahaFeltBackend2/models"
+	model "AahaFeltBackend/models"
 	"database/sql"
 	"fmt"
 	"strings"
@@ -24,18 +24,22 @@ func NewPostgresStorage() (*PostgresStorage, error) {
 	}
 
 	if !exists {
-		_, err = db.Exec("CREATE DATABASE bank")
+		_, err = db.Exec("CREATE DATABASE products")
 		if err != nil {
 			return nil, fmt.Errorf("failed to create database: %w", err)
 		}
 	}
 
-	db, err = sql.Open("postgres", connStr+" dbname=bank")
+	db, err = sql.Open("postgres", connStr+" dbname=products")
 	if err != nil {
 		return nil, err
 	}
 
 	return &PostgresStorage{db: db}, nil
+}
+
+func (s *PostgresStorage) Close() {
+	s.db.Close()
 }
 
 func (s *PostgresStorage) Init() error {

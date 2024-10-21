@@ -2,8 +2,10 @@ package api
 
 import (
 	model "AahaFeltBackend/models"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"os"
 	"strconv"
@@ -62,40 +64,85 @@ func writeJSON(w http.ResponseWriter, status int, v any) error {
 	return json.NewEncoder(w).Encode(v)
 }
 
+func (s *ApiServer) handlePostProducts(w http.ResponseWriter, r *http.Request) error {
+
+	err := r.ParseMultipartForm(10 << 20)
+	if err != nil {
+		return fmt.Errorf("error parsing multipart form: %v", err)
+	}
+
+	name := r.FormValue("name")
+	category := r.FormValue("category")
+	description := r.FormValue("description")
+	stock, _ := strconv.Atoi(r.FormValue("stock"))
+	price, _ := strconv.Atoi(r.FormValue("price"))
+	listed := r.FormValue("listed") == "true"
+	offer := r.FormValue("offer")
+	sizes := r.FormValue("sizes")
+	highlights := r.FormValue("highlights")
+	color := r.FormValue("color")
+	discount, _ := strconv.Atoi(r.FormValue("discount"))
+
+	imageFile, _, err := r.FormFile("image")
+	if err != nil {
+		return fmt.Errorf("error reading image file: %v", err)
+	}
+	defer imageFile.Close()
+
+	imageBytes, err := ioutil.ReadAll(imageFile)
+	if err != nil {
+		return fmt.Errorf("error reading image bytes: %v", err)
+	}
+	imageBase64 := base64.StdEncoding.EncodeToString(imageBytes)
+
+	var imagesBase64 []string
+	for _, fileHeader := range r.MultipartForm.File["images"] {
+		file, err := fileHeader.Open()
+		if err != nil {
+			return fmt.Errorf("error reading additional image file: %v", err)
+		}
+		defer file.Close()
+
+		imageBytes, err := ioutil.ReadAll(file)
+		if err != nil {
+			return fmt.Errorf("error reading additional image bytes: %v", err)
+		}
+		imagesBase64 = append(imagesBase64, base64.StdEncoding.EncodeToString(imageBytes))
+	}
+
+	imagesBase64Str := strings.Join(imagesBase64, ",")
+
+	// Create a new product
+	product := model.NewProduct(
+		name,
+		category,
+		description,
+		imageBase64,
+		imagesBase64Str,
+		stock,
+		price,
+		listed,
+		offer,
+		sizes,
+		highlights,
+		color,
+		discount,
+	)
+
+	if err := s.store.AddProducts(*product); err != nil {
+		return fmt.Errorf("failed to add product: %v", err)
+	}
+
+	return writeJSON(w, http.StatusOK, product)
+}
+
 func (s *ApiServer) handleGetProducts(w http.ResponseWriter, r *http.Request) error {
 	products, err := s.store.GetProducts()
 	if err != nil {
 		return err
 	}
+
 	return writeJSON(w, http.StatusOK, products)
-}
-func (s *ApiServer) handlePostProducts(w http.ResponseWriter, r *http.Request) error {
-	product := model.Product{}
-	if err := json.NewDecoder(r.Body).Decode(&product); err != nil {
-		return fmt.Errorf("invalid request payload: %v", err)
-	}
-
-	pro := model.NewProduct(
-		product.Name,
-		product.Category,
-		product.Description,
-		product.Image,
-		product.Images,
-		product.Stock,
-		product.Price,
-		product.Listed,
-		product.Offer,
-		product.Sizes,
-		product.Highlights,
-		product.Color,
-		product.Discount,
-	)
-
-	if err := s.store.AddProducts(*pro); err != nil {
-		return fmt.Errorf("failed to add product: %v", err)
-	}
-
-	return writeJSON(w, http.StatusOK, pro)
 }
 
 func (s *ApiServer) handleGetProductsById(w http.ResponseWriter, r *http.Request) error {
@@ -146,7 +193,10 @@ func (s *ApiServer) handleDeleteProduct(w http.ResponseWriter, r *http.Request) 
 	return writeJSON(w, http.StatusOK, "Product deleted successfully")
 }
 func (s *ApiServer) handleGetCategories(w http.ResponseWriter, r *http.Request) error {
-	categories := s.store.GetCategories()
+	categories, err := s.store.GetCategories()
+	if err != nil {
+
+	}
 
 	return writeJSON(w, http.StatusOK, categories)
 }

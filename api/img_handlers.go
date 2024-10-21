@@ -38,6 +38,12 @@ func (s *ApiServer) getImageHandler(w http.ResponseWriter, r *http.Request) erro
 		return nil
 	}
 
+	// Ensure image is not nil
+	if image == nil {
+		http.Error(w, "Image not found", http.StatusNotFound)
+		return nil
+	}
+
 	imageBytes, err := base64.StdEncoding.DecodeString(image.ImageBase64)
 	if err != nil {
 		http.Error(w, "Failed to decode image", http.StatusInternalServerError)
