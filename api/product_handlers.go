@@ -74,14 +74,14 @@ func (s *ApiServer) handlePostProducts(w http.ResponseWriter, r *http.Request) e
 	name := r.FormValue("name")
 	category := r.FormValue("category")
 	description := r.FormValue("description")
-	stock, _ := strconv.Atoi(r.FormValue("stock"))
-	price, _ := strconv.Atoi(r.FormValue("price"))
-	listed := r.FormValue("listed") == "true"
+	stock := r.FormValue("stock")
+	price := r.FormValue("price")
+	listed := r.FormValue("listed")
 	offer := r.FormValue("offer")
 	sizes := r.FormValue("sizes")
 	highlights := r.FormValue("highlights")
 	color := r.FormValue("color")
-	discount, _ := strconv.Atoi(r.FormValue("discount"))
+	discount := r.FormValue("discount")
 
 	imageFile, _, err := r.FormFile("image")
 	if err != nil {

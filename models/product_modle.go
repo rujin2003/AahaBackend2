@@ -7,17 +7,17 @@ type Product struct {
 	Description string `json:"description"`
 	Image       string `json:"image"`
 	Images      string `json:"images"`
-	Stock       int    `json:"stock"`
-	Price       int    `json:"price"`
-	Listed      bool   `json:"listed"`
+	Stock       string `json:"stock"`
+	Price       string `json:"price"`
+	Listed      string `json:"listed"`
 	Offer       string `json:"offer"`
 	Sizes       string `json:"sizes"`
 	Highlights  string `json:"highlights"`
 	Color       string `json:"color"`
-	Discount    int    `json:"discount"`
+	Discount    string `json:"discount"`
 }
 
-func NewProduct(name, category, description, image, images string, stock, price int, listed bool, offer, sizes, highlights, color string, discount int) *Product {
+func NewProduct(name, category, description, image, images string, stock, price string, listed string, offer, sizes, highlights, color string, discount string) *Product {
 	return &Product{
 		Name:        name,
 		Category:    category,

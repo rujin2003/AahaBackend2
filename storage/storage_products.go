@@ -51,14 +51,14 @@ func (s *PostgresStorage) Init() error {
             description TEXT,
             image TEXT,
             images TEXT[],
-            stock INT,
-            price INT,
-            listed BOOLEAN,
+            stock TEXT,
+            price TEXT,
+            listed TEXT,
             offer TEXT,
             sizes TEXT[],
             highlights TEXT,
             color TEXT,
-            discount INT
+            discount TEXT
         )
     `)
 	return err
