@@ -161,22 +161,89 @@ func (s *ApiServer) handleGetProductsById(w http.ResponseWriter, r *http.Request
 }
 
 func (s *ApiServer) UpdateProductHandler(w http.ResponseWriter, r *http.Request) error {
+	// Parse the product ID from the URL
 	idStr := mux.Vars(r)["id"]
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
 		return fmt.Errorf("invalid product ID: %v", err)
 	}
 
-	var product model.Product
-	if err := json.NewDecoder(r.Body).Decode(&product); err != nil {
-		return fmt.Errorf("invalid request payload: %v", err)
+	// Parse the multipart form data
+	err = r.ParseMultipartForm(10 << 20)
+	if err != nil {
+		return fmt.Errorf("error parsing multipart form: %v", err)
 	}
 
-	if err := s.store.UpdateProductById(id, product); err != nil {
+	// Extract fields from the form data
+	name := r.FormValue("name")
+	category := r.FormValue("category")
+	description := r.FormValue("description")
+	stock := r.FormValue("stock")
+	price := r.FormValue("price")
+	listed := r.FormValue("listed")
+	offer := r.FormValue("offer")
+	sizes := r.FormValue("sizes")
+	highlights := r.FormValue("highlights")
+	color := r.FormValue("color")
+	discount := r.FormValue("discount")
+
+	// Handle the primary image file
+	imageFile, _, err := r.FormFile("image")
+	var imageBase64 string
+	if err == nil {
+		defer imageFile.Close()
+		imageBytes, err := ioutil.ReadAll(imageFile)
+		if err != nil {
+			return fmt.Errorf("error reading image bytes: %v", err)
+		}
+		imageBase64 = base64.StdEncoding.EncodeToString(imageBytes)
+	}
+
+	// Handle additional image files
+	var imagesBase64 []string
+	if r.MultipartForm != nil {
+		for _, fileHeader := range r.MultipartForm.File["images"] {
+			file, err := fileHeader.Open()
+			if err != nil {
+				return fmt.Errorf("error reading additional image file: %v", err)
+			}
+			defer file.Close()
+
+			imageBytes, err := ioutil.ReadAll(file)
+			if err != nil {
+				return fmt.Errorf("error reading additional image bytes: %v", err)
+			}
+			imagesBase64 = append(imagesBase64, base64.StdEncoding.EncodeToString(imageBytes))
+		}
+	}
+
+	imagesBase64Str := strings.Join(imagesBase64, ",")
+
+	product := model.NewProduct(
+		name,
+		category,
+		description,
+		imageBase64,
+		imagesBase64Str,
+		stock,
+		price,
+		listed,
+		offer,
+		sizes,
+		highlights,
+		color,
+		discount,
+	)
+
+	// Update the product in the store
+	if err := s.store.UpdateProductById(id, *product); err != nil {
 		return fmt.Errorf("failed to update product: %v", err)
 	}
 
-	return writeJSON(w, http.StatusOK, "Product updated successfully")
+	// Return a success response
+	return writeJSON(w, http.StatusOK, map[string]string{
+		"message": "Product updated successfully",
+	})
 }
 
 func (s *ApiServer) handleDeleteProduct(w http.ResponseWriter, r *http.Request) error {
